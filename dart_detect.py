@@ -13,7 +13,7 @@ import time
 
 
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 # get width
 width = cap.get(3)
@@ -47,9 +47,12 @@ cv2.startWindowThread()      # else window won't close when q is pressed
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
+    
+    #The following line would change the RGB frame to a greyscale. We need RGB for the detection of the board.
+    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Our operations on the frame come here
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #Rename gray anyway for the rest of this loop
+    gray = frame
 
     # Resize (new)
     gray = cv2.resize(gray, (500, 300)) 
@@ -69,12 +72,10 @@ while(True):
     # puting the FPS count on the frame 
     cv2.putText(gray, fps, (7, 70), font, 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-
     # Display the resulting frame
     cv2.imshow('frame',gray)
     # key = cv2.waitKey(0) & 0xFF
-#    if key == ord("q"):
-#        break
+
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
         
