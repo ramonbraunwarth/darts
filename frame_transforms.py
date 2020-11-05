@@ -62,6 +62,18 @@ def transform_frame(frame, selector_key = 'none'):
         
     if selector_key == 'edges':
         return cv2.Canny(frame, 100, 200)
+
+    if selector_key == 'redandgreen':  #Probably not the cleanest implementation (key and recursion), +++TBI
+        #CONST value for below, originally called DETECTION_STRUCTURING_ELEMENT: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html 
+        DETECTION_KERNEL = (100,100)
+
+        #Combine red and green frame
+        redgreen_frame = transform_frame('red') + transform_frame('green')
+
+        #Closing with cv2.morphologyEx and argument cv2.MORPH_CLOSE (remove noisy gaps in detected circles)
+        closing_kernel = np.ones(DETECTION_KERNEL,np.uint8)
+        return cv2.morphologyEx(redgreen_frame, cv2.MORPH_CLOSE, closing_kernel)
+
         
 
     # If no selector key matches, return input frame
@@ -80,7 +92,7 @@ def transform_frame(frame, selector_key = 'none'):
 
 
 # Key to choose transformation in transform_frame() above
-TRANSFORMATION_SELECTOR_KEY = 'edges'
+TRANSFORMATION_SELECTOR_KEY = 'redandgreen'
 
 
 cap = cv2.VideoCapture(0)
