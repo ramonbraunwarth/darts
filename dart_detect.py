@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
 
 
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-# In[2]:
 
 
 cap = cv2.VideoCapture(0)
@@ -31,9 +27,6 @@ print('new width: ' + str(width))
 # check height
 height = cap.get(4)
 print('new height: ' + str(height))
-
-
-# In[3]:
 
 
 # show video (in extra window), stop by pressing q
@@ -58,13 +51,6 @@ cap.release()
 cv2.destroyAllWindows()
 
 
-# In[11]:
-
-
-
-
-
-# In[ ]:
 
 
 
