@@ -40,7 +40,7 @@ def transform_frame(frame, selector_key = 'none'):
             # CONST variables for green detection
             hue_min = 0  
             hue_max = 20
-            SV_threshold = 80 # Set lower threshold for saturation and value (lumination) in mask
+            SV_threshold = 120 # Set lower threshold for saturation and value (lumination) in mask
 
         # Set a blur with a Gaussian smoothing kernel
         BLUR = (5,5) 
@@ -64,17 +64,15 @@ def transform_frame(frame, selector_key = 'none'):
         return cv2.Canny(frame, 100, 200)
 
     if selector_key == 'redandgreen':  #Probably not the cleanest implementation (key and recursion), +++TBI
-        #CONST value for below, originally called DETECTION_STRUCTURING_ELEMENT: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html 
-        DETECTION_KERNEL = (100,100)
 
         #Combine red and green frame
-        redgreen_frame = transform_frame('red') + transform_frame('green')
+        redgreen_frame = transform_frame(frame,'red') + transform_frame(frame,'green')
 
+        #CONST value for below, originally called DETECTION_STRUCTURING_ELEMENT: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html 
+        DETECTION_KERNEL = (5,5)
         #Closing with cv2.morphologyEx and argument cv2.MORPH_CLOSE (remove noisy gaps in detected circles)
         closing_kernel = np.ones(DETECTION_KERNEL,np.uint8)
         return cv2.morphologyEx(redgreen_frame, cv2.MORPH_CLOSE, closing_kernel)
-
-        
 
     # If no selector key matches, return input frame
     return frame
