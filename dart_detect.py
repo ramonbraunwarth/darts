@@ -17,16 +17,17 @@ print('width: ' + str(width))
 height = cap.get(4)
 print('height: ' + str(height))
 
-#set wanted width and heigth
-#ret = cap.set(3, width/4)
-#ret = cap.set(4, height/4)
+
+'''#set wanted width and heigth
+ret = cap.set(3, width/4)
+ret = cap.set(4, height/4)
 
 # check width
 width = cap.get(3)
 print('new width: ' + str(width))
 # check height
 height = cap.get(4)
-print('new height: ' + str(height))
+print('new height: ' + str(height))'''
 
 
 # show video (in extra window), stop by pressing q
