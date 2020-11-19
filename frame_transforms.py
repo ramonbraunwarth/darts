@@ -11,7 +11,7 @@ import time
 
 
 
-def transform_frame(frame, selector_key = 'none'):
+def transform_frame(frame, selector_key = 'redandgreen'):
     '''
     INPUT: cameraframe, selector key as str
     OUTPUT: cameraframe transformed according to transformation chosed by selector key
@@ -24,10 +24,6 @@ def transform_frame(frame, selector_key = 'none'):
 
     Use constant TRANSFORM_SELECTOR_KEY in code below
     '''
-
-    # No transformation for default value
-    if selector_key == 'none':
-        return frame
 
     # Transformation from dartboard_detector for certain colors (green, red)
     if selector_key in ('green','red'):
@@ -65,12 +61,13 @@ def transform_frame(frame, selector_key = 'none'):
 
     if selector_key == 'redandgreen':  #Probably not the cleanest implementation (key and recursion), +++TBI
 
-        #Combine red and green frame
+        # Combine red and green frame
         redgreen_frame = transform_frame(frame,'red') + transform_frame(frame,'green')
 
-        #CONST value for below, originally called DETECTION_STRUCTURING_ELEMENT: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html 
-        DETECTION_KERNEL = (5,5)
-        #Closing with cv2.morphologyEx and argument cv2.MORPH_CLOSE (remove noisy gaps in detected circles)
+        # CONST value for below, originally called DETECTION_STRUCTURING_ELEMENT: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html 
+        # Kernel size shall be optimized through some testing
+        DETECTION_KERNEL = (3,3)
+        # Closing with cv2.morphologyEx and argument cv2.MORPH_CLOSE (remove noisy gaps in detected circles)
         closing_kernel = np.ones(DETECTION_KERNEL,np.uint8)
         return cv2.morphologyEx(redgreen_frame, cv2.MORPH_CLOSE, closing_kernel)
 
@@ -78,7 +75,26 @@ def transform_frame(frame, selector_key = 'none'):
     return frame
 
 
+def zoomOnBoard(frame):
+	'''
+	This function takes a prepared binary frame filtered for colour boxes and returns x,y coordinates, width, heigth of a contouring rectangle (to zoom in)
+	'''
 
+	# frame = cv2.threshold(frame, 127, 255, cv2.THRESH_BINARY)
+	img, contours, hierarchy = cv2.findContours(frame,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+	max_cont = -1   
+	max_idx = 0
+	for i in range(len(contours)):
+		length = cv2.arcLength(contours[i], True)
+		if  length > max_cont:
+			max_idx = i
+			max_cont = length
+	x,y,w,h = cv2.boundingRect(contours[max_idx])
+	if(frame.ndim == 2):
+		IM_ROI = frame[y:y+h,x:x+w]
+	else:
+		IM_ROI = frame[y:y+h,x:x+w,:]
+	return IM_ROI
 
 
 
@@ -90,7 +106,7 @@ def transform_frame(frame, selector_key = 'none'):
 
 
 # Key to choose transformation in transform_frame() above
-TRANSFORMATION_SELECTOR_KEY = 'redandgreen'
+TRANSFORMATION_SELECTOR_KEY = 'edges'
 
 
 cap = cv2.VideoCapture(0)
@@ -123,39 +139,41 @@ new_frame_time = 0
 
 # show video (in extra window), stop by pressing q
 while(True):
-    # Capture frame-by-frame
-    ret, frame = cap.read()
-    
-    #The following line would change the RGB frame to a greyscale. We need RGB for the detection of the board.
-    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	# Capture frame-by-frame
+	ret, frame = cap.read()
 
-    # Resize window
-    frame = cv2.resize(frame, (500, 300))
+	#The following line would change the RGB frame to a greyscale. We need RGB for the detection of the board.
+	# frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # FPS CALCULATION AND DISPLAY
-    # time when we finish processing for this frame 
-    new_frame_time = time.time() 
-    fps = 1/(new_frame_time-prev_frame_time) 
-    prev_frame_time = new_frame_time 
-    fps = int(fps) 
-    # converting the fps to string so that we can display it on frame 
-    # by using putText function 
-    fps = str(fps) 
-    # puting the FPS count on the frame 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(frame, fps, (7, 70), font, 3, (100, 255, 0), 3, cv2.LINE_AA) 
+	# Resize window
+	# frame = cv2.resize(frame, (500, 300))
+
+	# FPS CALCULATION AND DISPLAY
+	# time when we finish processing for this frame 
+	new_frame_time = time.time() 
+	fps = 1/(new_frame_time-prev_frame_time) 
+	prev_frame_time = new_frame_time 
+	fps = int(fps) 
+	# converting the fps to string so that we can display it on frame 
+	# by using putText function 
+	fps = str(fps) 
+	# puting the FPS count on the frame 
+	font = cv2.FONT_HERSHEY_SIMPLEX
+	cv2.putText(frame, fps, (7, 70), font, 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
 
-    #Transform the frame according to some rule specified with second argument
-    frame = transform_frame(frame, TRANSFORMATION_SELECTOR_KEY) 
+	#Transform the frame according to some rule specified with second argument
+	frame = transform_frame(transform_frame(frame, TRANSFORMATION_SELECTOR_KEY),'none') 
 
-    # Display the resulting frame
-    cv2.imshow('frame',frame)
-    # key = cv2.waitKey(0) & 0xFF
+	frame = zoomOnBoard(frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-        
+	# Display the resulting frame
+	cv2.imshow('frame',frame)
+	# key = cv2.waitKey(0) & 0xFF
+
+	if cv2.waitKey(1) & 0xFF == ord('q'):
+		break
+
 # When everything done, release the capture
 cap.release()
 cv2.destroyAllWindows()
